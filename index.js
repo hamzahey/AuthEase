@@ -66,21 +66,27 @@ app.post("/register", async (req, res) => {
 
 app.post("/login", async (req, res) => {
     const email = req.body.username;
-    const password = req.body.password;
+    const loginPassword = req.body.password;
     try {
       const result = db.query("SELECT * FROM users WHERE email = $1",[
         email
       ]);
       if ((await result).rows.length > 0) {
-      console.log((await result).rows[0].password);
         const user = (await result).rows[0];
         const storedPassword = user.password;
+
+        bcrypt.compare(loginPassword, storedPassword, (err, hash)=>{
+          if(err){
+            console.log(err);
+          }else{
+            if (hash) {
+              res.render("secrets.ejs");
+            } else {
+              res.send("Incorrect Password");
+            }
+          }
+        });
   
-        if (password === storedPassword) {
-          res.render("secrets.ejs");
-        } else {
-          res.send("Incorrect Password");
-        }
       } else {
         res.send("User not found");
       }
